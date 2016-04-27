@@ -1,0 +1,375 @@
+2015-08-01 Paul Brossier <piem@aubio.org>
+
+	[ Interface ]
+	* src/onset/onset.h: add aubio_onset_get_silence(), fix description of
+	aubio_onset_get/set_delay functions
+	* src/tempo/tempo.h: add aubio_tempo_get_silence and aubio_tempo_get_threshold
+
+	[ Library ]
+	* src/io/audio_unit.c: fix deprecation warning (closes #16)
+	* src/io/sink_apple_audio.c: avoid opening null path
+	* src/io/sink_sndfile.c: improve error messages, set nsamples after write
+	* src/io/sink_wavwrite.c: fail if samplerate is way too large, assume
+	windows is little endian to build with mingw32
+	* src/io/source_apple_audio.c: check out of bounds _seek, set s->path, quiet
+	* src/io/source_avcodec.c: update to libav10, libavcodec 55.34.1
+	* src/io/source_sndfile.c: cast to uint_t for now, clarify some variables
+	names, fix crash, zero-pad output vector when upsampling, improve seek errors and strings
+	* src/io/source_wavread.c: avoid orphan parenthesis , cast size_t to int to
+	avoid warning on win64 , improve seek errors processing , sync error message
+	* src/onset/onset.c: avoid doubled onset at start, check parameters
+	* src/pitch/pitch.c: add Hertz as valid unit string, check parameters
+	* src/pitch/pitchyin.c, src/pitch/pitchyinfft.c: avoid producing NaN on silence (closes #7)
+	* src/pitch/pitchyin.{c,h}: fix typo, developed
+	* src/spectral/phasevoc.c: fix argument checks, improve error messages
+	* src/synth/sampler.c: make sure blocksize > 0
+	* src/tempo/beattracking.c: avoid segfault on silence (closes #24)
+	* src/tempo/tempo.c: add silence detection (closes #23), add old behavior in
+	examples/aubiotrack.c, check parameters
+	* src/*.c: fix some useless float conversion
+
+	[ Python ]
+	* python/ext/aubiomodule.c: improve documentation
+	* python/ext/py-musicutils.c: add silence_detection (closes #21),
+	level_detection, db_spl, level_lin, complete window implementation
+	* python/ext/py-source.c: add channels, add seek (closes #9)
+	* python/demos/demo_a_weighting.py: add simple demo for a_weighting
+	* python/demos/demo_sink_multi.py: add multi channel version
+	* python/demos/, python/demos/: minor improvements, improve syntax (closes #19)
+	* python/setup.py: use setuptools, add numpy to install_requires
+
+	[ Build ]
+	* waf: removed, now automatically downloaded with make, updated to 1.8.12
+	* Makefile: add target to fetch waf and basic instructions
+	* .travis.yml: added template for travis continuous integration
+	* {examples,src,tests}/wscript_build: add external libs and uselib to targets 
+	* src/wscript_build: do not hardocode install path
+	* wscript, src/io/*.c: use custom defines instead of __APPLE__
+	* wscript: make fat build optional, remove iOS sdk versioning
+
+	[ General ]
+	* examples/: use outmsg to print notes (fixes #8)
+	* examples/parse_args.h: improve short documentation (closes #12)
+	* doc/*.cfg: remove html timestamps to make build reproducible (see debian bug #779216)
+	* doc/aubiocut.txt: improve documentation
+	* doc/*.rst: add sphinx documentation basis with Makefile and conf.py
+	* README.md: minor updates
+	* python.old: removed old code
+	* tests/: minor bug fixing
+
+2014-01-31 Paul Brossier <piem@aubio.org>
+
+	[ Interface ]
+	* src/io/{source_wavread,sink_wavwrite}.h: new source and sink objects to
+	read and write simple wav files when building with no external dependencies
+	* src/io/{source,sink}*.h: added close functions to explicitly close file
+	* src/io/sink*.h: added do_multi, preset_channels, preset_samplerate,
+	get_channels and get_samplerate functions
+	* src/onset/onset.h: added aubio_onset_get_threshold
+	* src/mathutils.h: add fvec_quadratic_peak_mag to find the magnitude of
+	interpolated peaks
+
+	[ Library ]
+	* src/io/source_avcodec.c: implement _seek function
+	* src/io/source_sndfile.c: fixed _seek when signal is resampled
+	* src/spectral/ooura_fft8g.c: use float when double is not needed
+	* src/io/{source,sink}_apple_audio.c: improve error messages
+	* src/spectral/phasevoc.c: optimize swapbuffers by using memcpy
+	* src/lvec.c: add missing lvec_set_sample, improve test
+	* src/tempo/beattracking.c: improve confidence values by using interpolated
+	peak magnitude and avoiding nan
+	* src/tempo/tempo_davies.c: set default novelty function to specflux
+
+	[ Python module ]
+	* python/ext/py-{sink,source}.c: add do_multi and close functions
+	* python/ext/aubio-types.h: set NPY_NO_DEPRECATED_API to version 1.7
+	* python/lib/aubio/slicing.py: new function to slice a source into a list of
+	arbitrary regions
+	* python/scripts/aubiocut: add options --cut-until-nsamples and
+	--cut-until-nsclices, thanks to Mark Suppes for requesting, sponsoring,
+	and testing this feature
+
+	[ General code ]
+	* src/aubio_priv.h: use ifdefs to avoid checking undefined defines
+	* src/**.c: add missing prototypes, avoid some declarations after statement
+	* waf, waflib: update to 1.7.15
+
+2013-12-08  Paul Brossier <piem@aubio.org>
+
+	* Overdue: After more than five years of development behind the curtain,
+	time has come to release a new version of aubio.
+
+	* General: The library has been completely revised since 0.3.2. The API has
+	seen a major clean up, and has been thoroughly tested. The following list of
+	changes is not exhaustive.
+
+	* Memory management: allocation and freeing of memory has been optimized in
+	many ways. Several memory leaks and out of bound access have been fixed.
+
+	* Optimization: the FFT, central to most algorithms, can now be computed
+	using different optimized algorithms, depending on what is available on your
+	platform (FFTW, Ooura, or vDSP). Other simple optimization tricks are
+	included. Most can be deactivated by configuring the build accordingly.
+
+	* python/: The python interface has been completely rewritten to use numpy C
+	interface, making the aubio python module order of magnitudes faster than
+	the previous version. Several demos and tests are included.
+
+	* src/: source and header files are now organized in sub-directories.
+
+	* src/io/source.h: new source readers can now use any or all of libav,
+	CoreAudio, and libsndfile. This means that aubio can now easily read most
+	uncompressed and compressed formats. Compiled with libav, aubio can also
+	read audio from video files, and over the network.
+
+	* src/io/sink.h: a new sink object lets you write wav files with any number
+	of channels, at any samplerate, using libsndfile or CoreAudio.
+
+	* src/onset, src/tempo/, src/pitch: the different methods for onset, tempo,
+	and pitch extraction have seen many bug-fixes and optimizations.
+
+	* src/spectral/specdesc.h: new onset distances and statistical measures have
+	been added.
+
+	* src/spectral/filterbank.h: new filter bank to compute the energy in any
+	custom-defined frequency bands.
+
+	* src/spectral/mfcc.h, examples/aubiomfcc.c: a standard implementation of
+	the Mel-Frequency Cepstrum Coefficients algorithm has been added.
+
+	* src/temporal/{a,c}_weighting.h: standard implementation of the C-weighting
+	and A-weighting pre-processing filters are now provided for most commons
+	sampling rates.
+
+	* src/synth/wavetable.h, src/synth/sampler.h: provide basic ways to generate
+	some sounds.
+
+	* src/fvec.h: fvec_t, the vector object central to most aubio algorithms, is
+	now single channel. This simplifies the code of each algorithm greatly.
+
+	* src/lvec.h: lvec_t provides a double precision vector, required for some
+	operations to avoid floating point overflow
+
+	* src/fmat.h: fmat_t provides a single precision matrix, useful for
+	multi-channel operations and to some algorithms such as the spectral filter
+	bank.
+
+	* examples/: several new options, including new programs, have been
+	included. Refer to the documentation for details.
+
+	* tests/: several tests and examples programs have been added. This should
+	be a good place to look at to understand how to use aubio.
+
+	* doc/web.cfg: a simplified Doxygen configuration produces a simpler html
+	documentation.
+
+	* doc/*.txt: the manpages have been rewritten for txt2man.
+
+	* Build system: the build system has been switched from autotools/automake
+	to waf. Type './waf' or see README.md for instructions on how to use waf.
+
+2006-11-10  Paul Brossier <piem@altern.org>
+	* configure.ac: check c compiler for -Wextra option
+	* examples/*: add lash support to aubioonset, aubiotrack, and aubionotes
+	* */Makefile.am: improve compilation on Mac OS X, mingw and cygwin
+	* src/{onset,tempo}.[ch]: add simple c interfaces to onset and tempo tasks
+	* src/beattracking.c: allow the use of two beat trackers simultaneously
+	* examples/tests: add test programs for most c functions
+	* src/*.c: add most missing free calls
+	* src/*.c: fix some out of array writes
+	* src/,ext/: more gcc warning fixes
+
+2006-27-06  Paul Brossier <piem@altern.org>
+	* plugins/puredata/Makefile.am: move pd help to pattern-help.pd
+		- thanks goes to Frank Barknecht
+	* ext/sndfileio.c src/aubio_priv.h: fixes memset in aubio_priv.h, remove
+		useless sfinfo.format=0 - thanks karsten wiese 
+	* ext/midi/midi_alsa_seq.c: do not call pthread_ in aubio_midi_direct_output
+		- thanks karsten wiese
+	* python/aubio/task/beat.py: task beat() output seconds
+	* python/aubio/task/beat.py: ugly hack to plot beat track anyway
+	* examples/aubionotes.c: fix signed/unsigned mismatches in examples
+	* src/beattracking.c: fix signed/unsigned mismatches in beattracking
+	* src/pitchfcomb.c: fix signed/unsigned mismatches in pitchfcomb
+	* src/pitchschmitt.c: fix signed/unsigned mismatches in pitchscmitt
+	* configure.ac: use -Wextra but unused parameters, fix macos CFLAGS
+	* plugins/puredata/Makefile.am: simplify puredata Makefile.am
+	* python/aubio/Makefile.am: avoid overwriting CFLAGS
+	* examples/Makefile.am: use top_{build,src}dir instead of ../
+	* configure.ac: make configure.ac more readable
+	* python/aubio/task/cut.py: use os.path to derive default output filenames
+	* VERSION: 0.3.1
+
+2006-18-05 Paul Brossier <piem@altern.org>
+	* src/pitchyinfft.{c,h}: new pitch detection method
+	* src/beattracking.c: algorithm improved
+	* plugins/puredata/: new puredata external
+	* python/tasks: enhancements to the onset detection algorithms
+	* python/aubiocut: improved, can now slice at beats and silences
+	* python/aubiopitch: new python program to extract pitch tracks
+	* python/: plotting features for aubiocut and aubiopitch
+	* python/: interface refactored
+	* doc/: updated documentation 
+	* VERSION: 0.3.0
+
+2006-18-05  Paul Brossier <piem@altern.org>
+	* src/beattracking.c: added beattracking.c
+	* various bug fixes
+	* VERSION: 0.2.0
+
+2005-29-03  Paul Brossier <piem@altern.org>
+	* python/aubio/gnuplot.py: clean up and add plotsound
+	* python/aubiocompare-onset: updated
+	* examples/aubioonset.c: fix text output when nframes<4 
+	* ext/midi/midi_file.c: by default, int is unsigned on powerpc
+	* python/aubiocut, python/aubio/aubioclass.py: updated
+	* ext/midi/midi_alsa_seq.c: activated threading
+	* configure.ac,Makefile.am: added rules to check presence
+	 of swig, python, puredata and docbook-to-man.
+
+2005-17-03  Paul Brossier <piem@altern.org>
+	* examples/utils.{c,h}:  corrected usedoubled and -O interactions
+	* examples/aubioonset.c: added frames>=4 check (thanks Hamish Allan)
+
+2004-12-11  Paul Brossier <piem@altern,org>
+	* swig/Makefile.am: instructions moved to python/aubio and cleaned 
+	* python/aubiocut: corrected slicing on multichannel files
+	* VERSION: bumped to 0.1.8
+
+2004-12-06  Paul Brossier <piem@altern.org>
+	* examples/{midi*,testforclam}.c: removed
+	* src/{sndfile,midi*,jackio}.[ch]: moved to ext
+
+2004-12-03  Paul Brossier <piem@altern.org>
+	* src/{mathutils,pitchyin}.h: got rid of some shadowed declarations
+	* plugins/puredata: first puredata plugin attempt added
+
+2004-11-30  Paul Brossier <piem@altern.org>
+	* configure.ac: added -lmx on macosx
+	* python/aubiocut: seeks for local minima before peak
+	                   added zero crossing search
+	* src/pitchyinc.c: adds draft for all-in-one faster function
+	* examples/*.c: added ladcca client (needs work)
+	* examples/aubioonset.c: cleaned up verbose stdout 
+	* doc/aubio.css: updated
+
+2004-10-28  Paul Brossier <piem@altern.org>
+	* src/Makefile.am: added config.h installation
+	* VERSION: 0.1.7.1
+
+2004-10-26  Paul Brossier <piem@altern.org>:
+	* src/pitchdetection.*: moved to src/pitchmcomb.*, now includes a
+	draft driver for transparent use of mcomb or yin 
+	* src/pitchmcomb.*: added from old src/pitchdetection.*
+	* VERSION: 0.1.7
+
+2004-10-20  Paul Brossier <piem@altern.org>:
+	* configure.ac: made fftw3f, alsa and jack optional
+	* src/fft.{c,h}: now uses FFTW3F_SUPPORT
+	* src/timer.c: #if 0 on win32 version
+
+2004-10-18  Paul Brossier <piem@altern.org>:
+	* src/{fft,cvec,pvoc}.c: fixed fft size (N/2+1)
+	* src/{onsetdetection,tss}.c: fixed sizes as well
+	* src/pvoc.c: fixed resynthesis scaling factor (still missing
+	windowing), windowing added in pvoc_rdo 
+	* src/fft.h: removed FFTW typedef
+	* configure.ac: removed AC_ISC_POSIX to compile on mingw32
+	* src/fft.c: removed useless fftw3.h include
+	* src/pitchmcomb.c: removed call to vec_adapt_thres (writes out of
+	bounds)
+
+2004-10-17  Paul Brossier <piem@altern.org>
+	* src/sample.c: removed static _malloc, set all 0. (fixes nan bugs)
+	* examples/*.c: removed useless pvoc inits
+	* src/pitchyin.c: based on de Cheveigne paper
+
+2004-09-17  Paul Brossier <piem@altern.org>
+	* configure.ac,src/Makefile.am: cleaned up autotools process
+	* examples/aubio*.c: removed some useless code.
+	* src/sample.c: removed crazy call to memset
+
+2004-09-02  Paul Brossier <piem@altern.org>
+	* src/sndfileio.c: removed abusive call to AUBIO_ARRAY,
+	defined MAX_SIZE instead.
+	* src/onsetdetection.c: rewritten free_function.
+	* src/phasevoc.c: in aubio_pvoc_rdo, one way writing only
+	* swig/, python/aubio: added swig wrapper, played a bit with 
+	python interface.
+	* src/aubio.h: now includes midi_driver.h
+
+2004-06-25  Paul Brossier <piem@altern.org>
+	* src/peakpick.h: 
+	   renamed pickparams_t to aubio_pickpeak_t 
+	   disabled samer_pp (broken)
+	   added del_aubio_peakpick
+	   added aubio_peakpick_pimrt_wt (thanks mramirez) 
+	* python/aubio/onsetcompare.py: now works on huge list 
+	   thanks goes to Nicolas Wack
+	* examples/aubionotes.c: now outputs NOTEONs 
+	* configure.ac: quick hack to disable jack and alsa
+	* examples/*usingjack*: more hacking to disable jack
+	* README: some updates
+
+2004-06-23  Paul Brossier <piem@altern.org>
+	* src/*.h: added C++ ifdefs in header files
+	* src/fft.h: removed complex.h include in header
+	* src/hist.c: fixed out of array indexes 
+		thanks Miguel Ramirez!
+	* src/Makefile.am: added install headers
+	* doc/Makefile.am: removed dist-hook to update-docs
+	* sounds/Makefile.am: added install hooks
+	* aubio.pc.in: added aubio.pc generation for pkg-config
+	* python: added some evaluation functions 
+	* src/aubio_priv.h: moved AUBIO_DBG to stderr
+	* examples/utils.h: now outputs on stdout
+	* examples/midi*.c: fixed compilation with gcc-2.95
+	* VERSION: 0.1.4
+
+2004-04-27  Paul Brossier <piem@altern.org>
+	* pitchdetection.c: fixed, still not great
+	* Makefile.am: fixed missing headers (thank you Charbel) 
+	* aubioonset,aubionotes: renamed for install (were *demo files)
+	* First working release: 0.1.3
+
+2004-01-31  Paul Brossier <piem@altern.org>
+	* pitchdetection.c: working, still a bit too picky
+	* filter.c: sizeable biquad, fixed via pitchtest.c
+	* types.h: added file, all generic system wide types.
+	* tss.c: added some speed improvements
+
+2004-01-20  Paul Brossier <piem@altern.org>
+	* peakpick.c: working real time onset detection
+	* biquad.c: needs fixing
+
+2004-01-10  Paul Brossier <piem@altern.org>
+	* long time i didn't touch this file
+	* added various objects
+	* working onsetdetectors
+	* various examples
+	* splitted in a dynamic library
+	* functions renamed (new_. del_. aubio_._do)
+	* VERSION: 0.1.0_alpha
+
+2003-11-04  Paul Brossier <piem@altern.org>
+	* aubio.h: degrouping in modules
+	* VERSION: 0.0.6_alpha
+
+2003-11-03  Paul Brossier <piem@altern.org>
+	* phasevoc.c: fixed memory acces
+	* jackio.c: moving to ringbuffer type implementation
+	* VERSION: 0.0.4_alpha
+
+2003-11-03  Paul Brossier <piem@altern.org>
+	* jackio.c: added jack support
+	* aubioenc.c: fixed memory freeing bugs
+	* VERSION: 0.0.3_alpha
+
+2003-10-29  Paul Brossier <piem@altern.org>
+	* aubio.h: Grouping all headers
+	* makefile.am: Running first make dist
+	* VERSION: 0.0.2alpha
+ 
+2003-10-18  Paul Brossier <piem@altern.org>
+	* aubioenc.c: Working phase vocoder
+	* VERSION: 0.0.1alpha
