@@ -42,6 +42,6 @@ angular
         controllerAs: 'xml'
       })
       .otherwise({
-        redirectTo: '/'
+        redirectTo: '/xml'
       });
   });

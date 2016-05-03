@@ -11,7 +11,7 @@ angular.module('visualApp')
   .controller('ScoreCtrl', function (MusicXml) {
 	  var canvas = $("#score canvas")[0];
 	  var renderer = new Vex.Flow.Renderer(canvas,
-	    Vex.Flow.Renderer.Backends.RAPHAEL);
+	    Vex.Flow.Renderer.Backends.CANVAS);
 	  var ctx = renderer.getContext();
 	  ctx.setFont("Arial", 10, "").setBackgroundFillStyle("#eed");
 

@@ -70,10 +70,10 @@ module.exports = function (grunt) {
     // The actual grunt server settings
     connect: {
       options: {
-        port: 9000,
+        port: 9010,
         // Change this to '0.0.0.0' to access the server from outside.
         hostname: 'localhost',
-        livereload: 35729
+        livereload: 35756
       },
       livereload: {
         options: {
@@ -89,7 +89,12 @@ module.exports = function (grunt) {
                 '/app/styles',
                 connect.static('./app/styles')
               ),
-              connect.static(appConfig.app)
+              connect.static(appConfig.app),
+              connect().use(function(req, res){
+
+                  res.setHeader("Access-Control-Allow-Origin", "http://localhost:5000");
+                }
+              )
             ];
           }
         }

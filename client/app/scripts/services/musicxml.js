@@ -1246,7 +1246,7 @@ Vex.Flow.Measure.Part = function(object) {
   if (! object.time || ! object.time.num_beats || ! object.time.beat_value)
     throw new Vex.RERR("ArgumentError",
               "Constructor requires nonzero num_beats and beat_value");
-  this.time = Vex.Merge({}, object.time);
+  this.time = Vex.Merge({beat_value:4,num_beats:4,soft:true}, object.time);
 
   // Convenience options which can be set on a part instead of a stave/voice
   this.options = {time: this.time};
@@ -1273,7 +1273,7 @@ Vex.Flow.Measure.Part = function(object) {
   else if (object.staves instanceof Array) {
     var staveOptions = this.options;
     this.staves = object.staves.map(function(stave) {
-      var staveObj;
+      var staveObj='C';
       if (typeof stave == "string") // interpret stave as clef value
         staveObj = Vex.Merge({clef: stave}, staveOptions);
       // Copy staveOptions and overwrite with options from argument
@@ -1301,6 +1301,7 @@ Vex.Flow.Measure.Part.prototype.getVoice = function(voiceNum) {
     // Create empty voice
     this.voices[voiceNum] = new Vex.Flow.Measure.Voice(
                               Vex.Merge({time: this.time}, this.options));
+  this.time.soft=true;
   return this.voices[voiceNum];
 }
 Vex.Flow.Measure.Part.prototype.setVoice = function(voiceNum, voice) {
@@ -1441,6 +1442,7 @@ Vex.Flow.Measure.Stave = function(object) {
     throw new Vex.RERR("ArgumentError",
               "Constructor requires nonzero num_beats and beat_value");
   this.time = Vex.Merge({}, object.time);
+  if (typeof object.clef != "string")object.clef='treble';
   if (typeof object.clef != "string")
     throw new Vex.RERR("InvalidIRError",
               "Stave object requires clef property");

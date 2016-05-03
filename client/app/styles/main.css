@@ -12,7 +12,7 @@ body {
 }
 
 a { text-decoration: none; color: black;
-    padding-bottom: 3px; border-bottom: dotted black 1px }
+    padding-bottom: 3px; }
 a:link {text-decoration: none; color: black}
 a:visited {text-decoration: none; color: black}
 a:active {text-decoration: none; color: #003300}
@@ -112,6 +112,7 @@ body {
 
 /* Custom page footer */
 .footer {
+  background-color: #fff;
   padding-top: 19px;
   color: #777;
   border-top: 1px solid #e5e5e5;
