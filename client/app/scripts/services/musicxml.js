@@ -909,6 +909,7 @@ Vex.Flow.DocumentFormatter.prototype.drawBlock = function(b, context) {
 Vex.Flow.DocumentFormatter.Liquid = function(document) {
   if (arguments.length > 0) Vex.Flow.DocumentFormatter.call(this, document);
   this.width = 500; // default value
+  this.height = 300
   this.zoom = 0.8;
   this.scale = 1.0;
   if (typeof window.devicePixelRatio == "number"
@@ -936,7 +937,7 @@ Vex.Flow.DocumentFormatter.Liquid.prototype.getBlock = function(b) {
 
   // Update modifiers for first measure
   this.document.getMeasure(startMeasure).getStaves().forEach(function(s) {
-    console.log(s);
+    // console.log(s);
 
     if (typeof s.clef == "string" && ! s.getModifier("clef")) {
       s.addModifier({type: "clef", clef: s.clef, automatic: true});
@@ -1026,7 +1027,7 @@ Vex.Flow.DocumentFormatter.Liquid.prototype.getBlock = function(b) {
   }
   var height = this.getStaveY(startMeasure, i-1);
   // Add max extra space for last stave on any measure in this block
-  var maxExtraHeight = 90; // default: height of stave
+  var maxExtraHeight = 230; // default: height of stave
   for (var i = startMeasure; i <= endMeasure; i++) {
     var minHeights = this.getMinMeasureHeight(i);
     var extraHeight = minHeights[minHeights.length - 1];
@@ -1261,8 +1262,10 @@ Vex.Flow.Measure.Part = function(object) {
   if (typeof object.getVoices == "function") this.voices = object.getVoices();
   else if (object.voices instanceof Array) {
     var voiceOptions = this.options;
+    if(this.voices.length==0){console.log('vo',this.voices);this.voices= new Array(1);}
     this.voices = object.voices.map(function(voice) {
       // Copy voiceOptions and overwrite with options from argument
+      console.log('VOICE',voice);
       return new Vex.Flow.Measure.Voice(
         Vex.Merge(Vex.Merge({}, voiceOptions), voice));
     });
@@ -1297,11 +1300,11 @@ Vex.Flow.Measure.Part.prototype.setNumberOfVoices = function(numVoices) {
   this.voices.length = numVoices;
 }
 Vex.Flow.Measure.Part.prototype.getVoice = function(voiceNum) {
-  if (! this.voices[voiceNum])
+  if (! this.voices[voiceNum] && this.options)
     // Create empty voice
     this.voices[voiceNum] = new Vex.Flow.Measure.Voice(
                               Vex.Merge({time: this.time}, this.options));
-  this.time.soft=true;
+  this.time.soft=false;
   return this.voices[voiceNum];
 }
 Vex.Flow.Measure.Part.prototype.setVoice = function(voiceNum, voice) {

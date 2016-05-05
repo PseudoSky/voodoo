@@ -8,7 +8,15 @@
 // 'test/spec/**/*.js'
 
 module.exports = function (grunt) {
-
+  var address = grunt.option('ip') || '0.0.0.0';
+  var port = grunt.option('port') || 9010;
+  var lr = grunt.option('lr') || 35756;
+  var spit=address.split(':');
+  if(spit.length>1){
+    address=spit[0];
+    port=spit[1];
+  }
+  console.log('OPTION',address);
   // Time how long tasks take. Can help when optimizing build times
   require('time-grunt')(grunt);
 
@@ -70,10 +78,10 @@ module.exports = function (grunt) {
     // The actual grunt server settings
     connect: {
       options: {
-        port: 9010,
+        port: port,
         // Change this to '0.0.0.0' to access the server from outside.
-        hostname: 'localhost',
-        livereload: 35756
+        hostname: address,
+        livereload: lr
       },
       livereload: {
         options: {

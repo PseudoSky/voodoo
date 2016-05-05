@@ -4,19 +4,19 @@ import pyaudio
 import sys, time
 import numpy as np
 import wave
-from aubio import source, pitch, freqtomidi, midi2note,miditofreq
+from aubio import tempo,source, pitch, freqtomidi, midi2note,miditofreq
 import requests
 import ly.musicxml
 from ly.musicxml import create_musicxml, xml_objs
-from numpy import array, ma
+from numpy import array, ma,diff,median
 import threading
 # from threading import Thread
-
+from src.util_voodoo import Map
 import flask
 from flask import Flask, url_for,request
-app = Flask(__name__)
+app = flask.Flask(__name__)
 
-
+from fractions import Fraction
 xxx = create_musicxml.CreateMusicXML()
 xxx.create_title('Voodoo')
 xxx.create_part()
@@ -26,18 +26,31 @@ xax=xxx.musicxml()
 nl=[]
 prev=[time.time()]
 pitche=[]
-
+note_json=[]
 if len(sys.argv) < 2:
     filename = 'music.xml'
 else:
     filename = sys.argv[1]
-
+_times=[1./64,1./32,1./16,1./8,1./4,1./2,1.,2.,3.,4]
+_time_note=["1/64","1/32","1/16","1/8","1/4","1/2","1","2","3","4"]
 def noter(note):
+    # note=note.replace('#','/')
+    note=note[:-1].lower()+note[-1]
+    if(len(nl)>0 and note==nl[-1]): return 1
     if(len(prev)%4==0):xxx.create_measure(divs=1)
     time_now=time.time()
     print(nl)
     if(len(nl)>0):
+        dur = _time_note[min(enumerate(_times), key=lambda x: abs(x[1]-(time_now-prev[-1])))[0]]
         xxx.new_note(nl[-1][0],nl[-1][1:], 'whole', time_now-prev[-1],voice=1)
+        note_json.append({
+            "note":nl[-1][0],
+            "octave":nl[-1][1:], 
+            "duration":time_now-prev[-1]
+            })
+        # print Fraction(time_now-prev[-1]).limit_denominator(8)
+
+        # print(note_json)
         nl.append(note)
         prev.append(time_now)
     else:
@@ -76,15 +89,25 @@ downsample = 1
 samplerate = 44100 / downsample
 if len( sys.argv ) > 2: samplerate = int(sys.argv[2])
 
-win_s = 4096 / downsample # fft size
-hop_s = 512  / downsample # hop size
+win_s = 4096 #/ downsample # fft size
+hop_s = 512  #/ downsample # hop size
+
+
+T = Map()
+T.beats = []
+T.win_s = 512                 # fft size
+T.hop_s = T.win_s / 2 
+T.delay = 4. * T.hop_s
+T.tempo = tempo("default", T.win_s, T.hop_s, samplerate)
+T.median_win_s = 10
 
 # s = source(filename, samplerate, hop_s)
 samplerate = 44100#s.samplerate
 
 tolerance = 0.8
 
-pitch_o = pitch("yinfft", win_s, hop_s, samplerate)
+
+pitch_o = pitch( "yinfft", win_s, hop_s, samplerate)
 pitch_o.set_unit("midi")
 pitch_o.set_tolerance(tolerance)
 
@@ -101,18 +124,29 @@ total_frames = 0
 def sample(samples):
     
 
-    # print samples[0], len(samples)
+
     pitch = pitch_o(samples)[0]
+    is_beat= T.tempo(samples)
     # print(pitch)
+    if is_beat:
+        # print "\nBPMS",is_beat,"\n"
+        tb=T.tempo.get_last_s()
+        T.beats.append(tb)
+        if(len(T.beats)>T.median_win_s):
+            bpms = 60./ diff(T.beats)
+            T.bpms = median(bpms[-T.median_win_s:])
+            print "\nBPMS",bpms,"\n"
+        
     pitch = int(round(pitch))
     confidence = pitch_o.get_confidence()
+    print confidence
     if confidence < 0.8: pitch = 0.
     if confidence > 0.8:
-        print pitch,miditofreq(min(pitch,127)),midi2note(min(pitch,127))
+        n=midi2note(min(pitch,127))
+        print confidence,pitch,miditofreq(min(pitch,127)),midi2note(min(pitch,127))
         # st+=' '+midi2note(int(pitch))
-        noter(midi2note(min(pitch,127)))
+        if(n[-1]!='1'):noter(n)
 
-    
     #print "%f %f %f" % (total_frames / float(samplerate), pitch, confidence)
     
     # pp += [pitch]
@@ -165,13 +199,13 @@ stream = p.open(format = FORMAT,
                 # output_device_index=2,
                 )
 
-out = p.open(format = FORMAT,
-                channels = CHANNELS,
-                rate = RATE,
-                output = True,
-                frames_per_buffer = chunk,
-                output_device_index=1
-                )
+# out = p.open(format = FORMAT,
+#                 channels = CHANNELS,
+#                 rate = RATE,
+#                 output = True,
+#                 frames_per_buffer = chunk,
+#                 output_device_index=1
+#                 )
 
 count = p.get_device_count()
 
@@ -198,11 +232,10 @@ recording=False
 def get_rec():
     global recording
     return str(recording)
+
 def set_rec(r):
     global recording
-    print r
     if(r):
-        print r
         if(r=='true'):
             recording=True
         else: 
@@ -312,6 +345,19 @@ def crossdomain(origin=None, methods=None, headers=None,max_age=21600, attach_to
 @crossdomain(origin='*')
 def info():
     global nl,recording
+    return jsonify(r=recording,notes=nl)
+
+@app.route('/info/<int:since>')
+@crossdomain(origin='*')
+def info_since(since):
+    global nl,recording
+    return jsonify(r=recording,notes=nl[since:])
+
+
+@app.route('/poll')
+@crossdomain(origin='*')
+def poll():
+    global nl,recording
     return jsonify(l=len(nl),
                    r=recording)
 
@@ -319,9 +365,6 @@ def info():
 @crossdomain(origin='*')
 def toggle(rec):
     global recording
-    print recording
-    # recording=not(recording)
-    # print set_recording()
     return set_rec(rec)
 
 @app.route('/reset')
@@ -332,9 +375,9 @@ def reset():
     xxx.create_title('Voodoo')
     xxx.create_part()
     xxx.create_measure(divs=1)
-    xxx.create_tempo('',['.',90],'8',3)
+    # xxx.create_tempo('',['.',90],'8',3)
     xax=xxx.musicxml()
-    nl=['c1']
+    nl=[]
     prev=[time.time()]
     pitche=[]
     return "ok"
@@ -357,8 +400,8 @@ if __name__ == '__main__':
     # t2 = threading.Thread(target=)
     t1.start()
     # t2.start()
-    # app.debug = True
-    app.run()
+    app.quiet = True
+    app.run(host='0.0.0.0')
     try:
         while 1:
             time.sleep(.1)

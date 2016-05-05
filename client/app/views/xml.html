@@ -1,2 +1,7 @@
-<button ng-click="toggle()" ng-class="{'active':recording }">Recording</button>
-<div class="content" id="viewer" style="padding-bottom: 5pt"></div>
+<div class="record-btn">	
+	<button ng-click="stream()" class="fl" ng-class="{'active':recording }" ng-disabled="recording">Recording</button>
+	<button ng-click="start()" class="" ng-class="{'active':recording }" ng-disabled="recording">Recording</button>
+	<button ng-click="stop()" ng-class="{'active':recording }" ng-disabled="!recording">Stop</button>
+	<button ng-click="reset()" class="fr" ng-class="{'active':recording }">Clear</button>
+</div>
+<div class="content" id="viewer" ng-class="{'recording':recording }" style="padding-bottom: 50px"></div>

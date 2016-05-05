@@ -9,6 +9,8 @@ npm-debug.log
 coverage
 __pycache__
 
+*.pyc
+
 *.lock-waf_darwin_build
 */*.lock-waf_darwin_build
 */**.lock-waf_darwin_build

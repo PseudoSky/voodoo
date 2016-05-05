@@ -1,3 +1,27 @@
+.fl{
+  float: left;
+}
+.fr{
+  float: right;
+}
+.record-btn{
+  z-index: 100;
+  position: absolute;
+  left:0;
+  top: 0;
+}
+#viewer{
+  width: 100%;
+  padding-bottom: -50px;
+  position: absolute;
+  max-width: 500px;
+
+  bottom:0;
+}
+#viewer.recording{
+  
+}
+
 div.content {
   overflow: hidden;
   width: 100%;
@@ -40,7 +64,7 @@ h1 {
 .chordname {
   width: 80%;
   margin: auto;
-  font-family: "Marvel", cursive;
+  /*font-family: "Marvel", cursive;*/
   font-size: 20px;
   text-align: center;
 }
@@ -52,19 +76,19 @@ h1 {
 
 .section .title {
   color: black;
-  font-family: "Marvel", cursive;
+  /*font-family: "Marvel", cursive;*/
   font-weight: bold;
   font-size: 30px;
 }
 .section .description {
   color: #444444;
-  font-family: "Marvel", cursive;
+  /*font-family: "Marvel", cursive;*/
   font-size: 22px;
 }
 
 .topbar {
   float: right;
-  font-family: "Marvel", cursive;
+  /*font-family: "Marvel", cursive;*/
   padding: 5px;
   padding-left: 8px;
   border-bottom: dotted green 1px;
